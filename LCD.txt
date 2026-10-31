@@ -1,0 +1,69 @@
+#include "main.h"
+#include "lcd1602_i2c.h" // Dodaj bibliotekę obsługi wyświetlacza LCD 1602 I2C
+
+extern I2C_HandleTypeDef hi2c1; // Deklaracja uchwytu I2C
+
+// Funkcja do obliczania częstotliwości i wypełnienia PWM
+void DisplayPWMParameters(void) {
+    // Pobranie bieżących ustawień timera
+    uint32_t timerClock = HAL_RCC_GetPCLK1Freq(); // Częstotliwość zegara dla timera
+    uint32_t prescaler = htim1.Instance->PSC + 1; // Preskaler
+    uint32_t autoReload = htim1.Instance->ARR + 1; // Wartość ARR
+    uint32_t compareValue = htim1.Instance->CCR1; // Wartość CCR1
+
+    // Obliczenie częstotliwości PWM
+    float pwmFrequency = (float)timerClock / (prescaler * autoReload);
+
+    // Obliczenie wypełnienia PWM
+    float pwmDutyCycle = ((float)compareValue / autoReload) * 100.0f;
+
+    // Bufor na tekst wyświetlany na LCD
+    char line1[16];
+    char line2[16];
+
+    // Formatowanie tekstu
+    snprintf(line1, sizeof(line1), "Freq: %.1f Hz", pwmFrequency);
+    snprintf(line2, sizeof(line2), "Duty: %.1f %%", pwmDutyCycle);
+
+    // Wyświetlenie na LCD
+    lcd1602_set_cursor(0, 0); // Ustawienie kursora na 1. wiersz
+    lcd1602_print(line1);
+    lcd1602_set_cursor(0, 1); // Ustawienie kursora na 2. wiersz
+    lcd1602_print(line2);
+}
+
+int main(void) {
+    HAL_Init();
+    SystemClock_Config();
+
+    MX_GPIO_Init();
+    MX_ADC1_Init();
+    MX_TIM1_Init();
+    MX_I2C1_Init(); // Inicjalizacja I2C
+
+    lcd1602_init(); // Inicjalizacja wyświetlacza LCD 1602
+    lcd1602_clear(); // Wyczyszczenie wyświetlacza
+
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+
+    while (1) {
+        HAL_ADC_Start(&hadc1);
+
+        if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
+            adcDeadTime = HAL_ADC_GetValue(&hadc1);
+        }
+
+        if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
+            adcFrequency = HAL_ADC_GetValue(&hadc1);
+        }
+
+        HAL_ADC_Stop(&hadc1);
+        UpdatePWMParameters();
+
+        // Wyświetlenie parametrów PWM na LCD
+        DisplayPWMParameters();
+
+        HAL_Delay(500); // Odświeżanie co 500 ms
+    }
+}
