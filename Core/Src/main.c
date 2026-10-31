@@ -34,13 +34,13 @@ I2C_HandleTypeDef hi2c1;
 
 // Previous variables remain the same...
 I2C_HandleTypeDef hi2c1;
-char lcdBuffer[20];  // Buffer for LCD text 16, NA WSZELKI WYPADEK 20
+char lcdBuffer[20];  // Buffer for LCD text 16(20),
 
 
 // ADC readings storage
 uint32_t adcDeadTime = 0;     // Dead time value from potentiometer
 uint32_t adcFrequency = 0;    // Frequency value from potentiometer
-//#define VREFINT_CAL_ADDR ((uint16_t*)0x1FFFF7BA) // Adres kalibracyjny Vrefint (z DS)
+//#define VREFINT_CAL_ADDR ((uint16_t*)0x1FFFF7BA) // Calibrating address Vrefint (z DS)
 
 uint32_t deadTime=10;
 
@@ -65,8 +65,8 @@ void LCD_Clear(void);
 void UpdateDisplay(void);
 
 int MeasureVdda(void) {
-    uint16_t vrefint_adc = 0;     // Wartość ADC dla Vrefint
-    uint16_t vrefint_cal = *VREFINT_CAL_ADDR; // Odczyt kalibracyjny Vrefint
+    uint16_t vrefint_adc = 0;     // variable ADC dla Vrefint
+    uint16_t vrefint_cal = *VREFINT_CAL_ADDR; // Read calibrating Vrefint
 
     // Konfiguracja ADC dla kanału Vrefint
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -169,8 +169,8 @@ void UpdateDisplay(void) {
     // Calculate actual frequency
     //float frequencyRatio = adcFrequency / 1024.0f;
     //long int currentFreq = MIN_FREQUENCY +    (uint32_t)((MAX_FREQUENCY - MIN_FREQUENCY) * frequencyRatio);
-    uint32_t wholePart = targetFreq / 1000;  // Część całkowita w kHz
-    uint32_t fractionalPart = targetFreq % 1000; // Część ułamkowa (pozostałość)
+    uint32_t wholePart = targetFreq / 1000;  //  whole part in kHz
+    uint32_t fractionalPart = targetFreq % 1000; // fractional part
 
     // Update first line - Frequency
     LCD_SetCursor(0, 0);
@@ -184,7 +184,7 @@ void UpdateDisplay(void) {
     sprintf(lcdBuffer, "DTim: %lu       ", deadTime); //adcDeadTime
     //int kkk;
     //kkk=MeasureVdda();
-    //sprintf(lcdBuffer, "zas.%i", kkk ); //zasilanie
+    //sprintf(lcdBuffer, "zas.%i", kkk ); //supply
     LCD_SendString(lcdBuffer);
 }
 
